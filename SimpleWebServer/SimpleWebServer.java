@@ -1,4 +1,3 @@
-package SimpleWebServer;
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -53,6 +52,8 @@ public class SimpleWebServer {
                serverMessage.write(fileBytes, 0, byteAmount);
    
                entryFile.close();
+               serverMessage.close();
+               clientMessage.close();
             } else
                System.err.println("Bad Request Message.");
             clientSocket.close();
