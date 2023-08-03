@@ -30,31 +30,47 @@ public class HTTPRequest implements Runnable {
         StringTokenizer tokenizedLine = new StringTokenizer(firstLine);
 
         if (tokenizedLine.nextToken().equals("GET")) {
-            String fileName = tokenizedLine.nextToken();
+            try {
+                String fileName = tokenizedLine.nextToken();
 
-            if (fileName.startsWith("/"))
-               fileName = fileName.substring(1);
-            
-            File file = new File(fileName);
-            FileInputStream entryFile = new FileInputStream(fileName);
+                if (fileName.startsWith("/"))
+                fileName = fileName.substring(1);
+                
+                File file = new File(fileName);
+                FileInputStream entryFile = new FileInputStream(fileName);
 
-            int byteAmount = (int) file.length();
-            byte[] fileBytes = new byte[byteAmount];
-            entryFile.read(fileBytes);
+                int byteAmount = (int) file.length();
+                byte[] fileBytes = new byte[byteAmount];
+                entryFile.read(fileBytes);
 
-            serverMessage.writeBytes("HTTP/1.0 200 Document Follows\r\n");
-            
-            if (fileName.endsWith(".jpg")) {
-               serverMessage.writeBytes("Content-Type: image/jpeg\r\n");
-            } else if (fileName.endsWith(".gif")) {
-               serverMessage.writeBytes("Content-Type: image/gif\r\n");
+                serverMessage.writeBytes("HTTP/1.0 200 Document Follows\r\n");
+                
+                if (fileName.endsWith(".jpg")) {
+                serverMessage.writeBytes("Content-Type: image/jpeg\r\n");
+                } else if (fileName.endsWith(".gif")) {
+                serverMessage.writeBytes("Content-Type: image/gif\r\n");
+                } else if (fileName.endsWith(".html")) {
+                serverMessage.writeBytes("Content-Type: text/html\r\n");
+                }
+
+                serverMessage.writeBytes("Content-Length: " + byteAmount + "\r\n");
+                serverMessage.writeBytes("\r\n");
+                serverMessage.write(fileBytes, 0, byteAmount);
+
+                entryFile.close();
+            } catch (Exception e) {
+                serverMessage.writeBytes("HTTP/1.0 404 Not Found\r\n");
+                serverMessage.writeBytes("Content-Type: text/html\r\n");
+                
+                String message = "<html>" +
+                    "<head><title>404 Not Found</title></head>" +
+                    "<body>404 Not Found</body>" +
+                    "</html>";
+
+                serverMessage.writeBytes("Content-Length: " + message.length() + "\r\n");
+                serverMessage.writeBytes("\r\n");
+                serverMessage.writeBytes(message);
             }
-
-            serverMessage.writeBytes("Content-Length: " + byteAmount + "\r\n");
-            serverMessage.writeBytes("\r\n");
-            serverMessage.write(fileBytes, 0, byteAmount);
-
-            entryFile.close();
             serverMessage.close();
             clientMessage.close();
         } else {
